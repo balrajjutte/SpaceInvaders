@@ -10,9 +10,12 @@ pygame.init()
 
 # create the screen
 screen = pygame.display.set_mode((800, 600))
+clock = pygame.time.Clock() # main menu
 
 # load background
 background = pygame.image.load("background.PNG")
+background_menu = pygame.image.load("background_mainmenu.jpg")
+
 
 # Background Sound
 mixer.music.load("background.wav")  # use .music.load for a long sound, .sound for a short sound
@@ -96,11 +99,24 @@ def isCollision(enemyX, enemyY, bulletX, bulletY):  # use distance between formu
         return True
     return False
 
-
+menu = True
 # Game Loop(an infinite loop, that runs till we close the window, all events take place in here)
 running = True,
 while running:
+    while menu: # all for main menu
 
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    menu = False
+
+        screen.fill((0, 0, 0))
+        clock.tick(30)
+        screen.blit(background_menu, (0, 0))
+
+        pygame.display.update()
     # RGB - Red, Green, Blue 0-255
     screen.fill((0, 0, 0))
 
@@ -123,7 +139,8 @@ while running:
                     bullet_sound.play()
                     bulletX = playerX  # gets the current player x coordinate stores it in new variable
                     fire_bullet(bulletX, bulletY)
-
+            if event.key == pygame.K_p:
+                menu = True
         if event.type == pygame.KEYUP:
             # too make sure spaceship stops
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
