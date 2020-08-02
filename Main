@@ -1,0 +1,219 @@
+#!/usr/bin/env python
+
+import pygame
+import random
+import math
+from pygame import mixer  # for music
+
+# Intialize the pygame
+pygame.init()
+
+# create the screen
+screen = pygame.display.set_mode((800, 600))
+
+# load background
+background = pygame.image.load("background.PNG")
+
+# Background Sound
+mixer.music.load("background.wav")  # use .music.load for a long sound, .sound for a short sound
+mixer.music.play(-1)  # the -1 allows it to play on loop
+
+# Title and Icon
+pygame.display.set_caption("Space Invaders")
+icon = pygame.image.load("001-ufo.png")
+pygame.display.set_icon(icon)
+
+# Player
+
+playerImg = pygame.image.load("space-invaders.png")
+# coordinates of the intial position, must be a little bit left of screen due to image size
+# and we want below the centre
+playerX = 370
+playerY = 480
+playerX_change = 0  # signify a change in x or y
+
+# Enemy want to appear randomly, adding multiple enemies requires a list
+enemyImg = []
+enemyX = []
+enemyY = []
+enemyX_change = []
+enemyY_change = []
+speed = 3
+
+# Bullet
+# at ready state you cant see the bullet on screen,
+# at fire, bullet is moving
+bulletImg = pygame.image.load("bullet.png")
+bulletX = 0  # not really need to be considered
+bulletY = 480  # intial height of bullet, always shot from the player height
+bulletX_change = 0  # will be required for allowing bullet to shoot in one direction
+bulletY_change = 13  # how fast you want it travel
+bullet_state = "ready"
+
+# for the score, choose font for display
+score_value = 0
+font = pygame.font.Font("freesansbold.ttf", 32)  # textname, size
+
+textX = 10
+textY = 10
+
+# Game over text
+over_font = pygame.font.Font("freesansbold.ttf", 64)
+
+
+def show_score(x, y):
+    # render method (text wrote, TRUE to display onscreen, colour(Rgb)) used for text first render then blit
+    score = font.render("Score : " + str(score_value), True, (255, 255, 255))
+    screen.blit(score, (x, y))
+
+
+def game_over_text():
+    over_text = over_font.render("GAME OVER", True, (255, 0, 0))
+    screen.blit(over_text, (200, 250))
+
+
+# function .blit draws the image on screen, requires 2 parameters,one is a tuple
+# , this then called in the while loop
+def player(x, y):
+    screen.blit(playerImg, (x, y))
+
+
+def enemy(x, y, i):
+    screen.blit(enemyImg[i], (x, y))
+
+
+def fire_bullet(x, y):  # want to change from ready to fire when space is pressed
+    global bullet_state  # using global allows you to access the variable inside the function
+    bullet_state = "fire"
+    # using same coordinates as player, but plus 16 (for centre in x direction)
+    # and +10 to make it appear little bit above the player
+    screen.blit(bulletImg, (x + 16, y + 10))
+
+
+def isCollision(enemyX, enemyY, bulletX, bulletY):  # use distance between formula equation
+    distance = math.sqrt((math.pow(enemyX - bulletX, 2)) + (math.pow(enemyY - bulletY, 2)))
+    if distance < 27:  # for collision
+        return True
+    return False
+
+
+# Game Loop(an infinite loop, that runs till we close the window, all events take place in here)
+running = True,
+while running:
+
+    # RGB - Red, Green, Blue 0-255
+    screen.fill((0, 0, 0))
+
+    # add background image
+    screen.blit(background, (0, 0))
+    # ANY INPUT CONTROL IE USING A KEYSTOKE IS AN EVENT
+    # KEYDOWN IS HOLDING KEYDOWN, KEYUP VICEVERSA
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        # if keystoke is pressed check whether its right or left or space
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                playerX_change = -7
+            if event.key == pygame.K_RIGHT:
+                playerX_change = 7
+            if event.key == pygame.K_SPACE:
+                if bullet_state == "ready":  # to ensure bullet only fired when in ready condition
+                    bullet_sound = mixer.Sound("laser.wav")
+                    bullet_sound.play()
+                    bulletX = playerX  # gets the current player x coordinate stores it in new variable
+                    fire_bullet(bulletX, bulletY)
+
+        if event.type == pygame.KEYUP:
+            # too make sure spaceship stops
+            if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
+                playerX_change = 0
+
+    # increasing enemies
+    num_of_enemies = 6
+    if score_value > 5:
+        num_of_enemies += 1
+        speed = 3.5
+    if score_value > 10:
+        num_of_enemies += 1
+        speed = 4
+    if score_value > 15:
+        num_of_enemies += 1
+    if score_value > 20:
+        num_of_enemies += 1
+    if score_value > 25:
+        num_of_enemies += 1
+        speed = 4.5
+    if score_value > 30:
+        num_of_enemies += 1
+        speed = 5
+    if score_value > 40:
+        num_of_enemies += 1
+        speed = 6
+    if score_value > 50:
+        num_of_enemies += 1
+        speed = 6.5
+    for i in range(num_of_enemies):
+        enemyImg.append(pygame.image.load("enemy.png"))
+        enemyX.append(random.randint(0, 735))  # u want to appear randomly across the width
+        enemyY.append(random.randint(50, 150))  # you want it to appear only near the top
+        enemyX_change.append(speed) # change speed here
+        enemyY_change.append(40)
+    # adding the change in coordinates
+    playerX += playerX_change
+
+    # adding the boundaries,
+    if playerX <= 0:
+        playerX = 0
+    # the picture width is 64 by 64 thus must consider this when setting the boundary
+    elif playerX >= 736:
+        playerX = 736
+
+    # use for loop to specify each enemy
+    for i in range(num_of_enemies):
+        # Game Over
+        if enemyY[i] > 440:
+
+            for j in range(num_of_enemies):
+                enemyY[j] = 2000
+            game_over_text()
+            break
+        # Enemy movement
+        enemyX[i] += enemyX_change[i]
+
+        # adding the boundaries, for the enemy, so it moves left and right and down when boundary is hit
+        if enemyX[i] <= 0:
+            enemyX_change[i] = speed
+            enemyY[i] += enemyY_change[i]
+        elif enemyX[i] >= 736:
+            enemyX_change[i] = -1 * speed
+            enemyY[i] += enemyY_change[i]
+
+        # collision
+        collision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)  # will store value true or false
+        if collision:  # you want to first reset the bullet, increase the score, reset enemy spawn
+            explosion_sound = mixer.Sound("explosion.wav")
+            explosion_sound.play()
+            bulletY = 480
+            bullet_state = "ready"
+            score_value += 1
+            enemyX[i] = random.randint(0, 735)
+            enemyY[i] = random.randint(50, 150)
+        # ensure while loop to display enemy is also within the for loop
+        enemy(enemyX[i], enemyY[i], i)
+
+    # bullet movement, first if statement allows multiple bullets to fire, resets it to ready
+    # second if statement ensure bullet remains on screen
+    if bulletY <= 0:
+        bulletY = 480
+        bullet_state = "ready"
+    if bullet_state is "fire":
+        fire_bullet(bulletX, bulletY)
+        bulletY -= bulletY_change
+
+    # ensure player function is called after screen.fill as overwise it will be drawn over
+    player(playerX, playerY)
+    show_score(textX, textY)
+
+    # constantly updating the display always need this
+    pygame.display.update()
