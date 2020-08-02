@@ -14,7 +14,7 @@ clock = pygame.time.Clock() # main menu
 
 # load background
 background = pygame.image.load("background.PNG")
-background_menu = pygame.image.load("background_mainmenu.jpg")
+background_menu = pygame.image.load("background_mainmenu.png")
 
 
 # Background Sound
