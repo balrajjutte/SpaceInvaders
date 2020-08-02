@@ -4,18 +4,39 @@ import pygame
 import random
 import math
 from pygame import mixer  # for music
+from datetime import date
+import csv
+
+date_recorded = []
+name_recorded = []
+score_recorded = []
+f = open("score_log.txt")
+csv_f = csv.reader(f)
+for row in csv_f:
+    date_record, name_record, score_record = row
+    date_recorded.append(date_record)
+    name_recorded.append(name_record)
+    score_recorded.append(int(score_record))
+f.close()
+top_score_index = (score_recorded.index(max(score_recorded)))
+top_date = date_recorded[top_score_index]
+top_name = name_recorded[top_score_index]
+top_score = score_recorded[top_score_index]
+
+today = date.today()
+
+name = input("Your Name: ")
 
 # Intialize the pygame
 pygame.init()
 
 # create the screen
 screen = pygame.display.set_mode((800, 600))
-clock = pygame.time.Clock() # main menu
+clock = pygame.time.Clock()  # main menu
 
 # load background
 background = pygame.image.load("background.PNG")
 background_menu = pygame.image.load("background_mainmenu.png")
-
 
 # Background Sound
 mixer.music.load("background.wav")  # use .music.load for a long sound, .sound for a short sound
@@ -56,7 +77,7 @@ bullet_state = "ready"
 # for the score, choose font for display
 score_value = 0
 font = pygame.font.Font("freesansbold.ttf", 32)  # textname, size
-
+small_font = pygame.font.Font("freesansbold.ttf", 16)
 textX = 10
 textY = 10
 
@@ -75,8 +96,16 @@ def game_over_text():
     screen.blit(over_text, (200, 250))
 
 
-# function .blit draws the image on screen, requires 2 parameters,one is a tuple
-# , this then called in the while loop
+def high_score():
+    highestscore_text = font.render("TOP SCORE: {}".format(top_score), True, (255, 0, 0))
+    screen.blit(highestscore_text, (550, 250))
+    recordtext = small_font.render("By {} on {}".format(top_name, top_date), True, (255, 0, 0))
+    screen.blit(recordtext, (550, 300))
+
+def new_record():
+    new_record_text = over_font.render("NEW RECORD {}!!!".format(score_value), True, (255, 255, 255))
+    screen.blit(new_record_text, (125, 150))
+
 def player(x, y):
     screen.blit(playerImg, (x, y))
 
@@ -99,11 +128,12 @@ def isCollision(enemyX, enemyY, bulletX, bulletY):  # use distance between formu
         return True
     return False
 
+
 menu = True
 # Game Loop(an infinite loop, that runs till we close the window, all events take place in here)
 running = True,
 while running:
-    while menu: # all for main menu
+    while menu:  # all for main menu
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -115,7 +145,7 @@ while running:
         screen.fill((0, 0, 0))
         clock.tick(30)
         screen.blit(background_menu, (0, 0))
-
+        high_score()
         pygame.display.update()
     # RGB - Red, Green, Blue 0-255
     screen.fill((0, 0, 0))
@@ -141,6 +171,7 @@ while running:
                     fire_bullet(bulletX, bulletY)
             if event.key == pygame.K_p:
                 menu = True
+
         if event.type == pygame.KEYUP:
             # too make sure spaceship stops
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
@@ -174,7 +205,7 @@ while running:
         enemyImg.append(pygame.image.load("enemy.png"))
         enemyX.append(random.randint(0, 735))  # u want to appear randomly across the width
         enemyY.append(random.randint(50, 150))  # you want it to appear only near the top
-        enemyX_change.append(speed) # change speed here
+        enemyX_change.append(speed)  # change speed here
         enemyY_change.append(40)
     # adding the change in coordinates
     playerX += playerX_change
@@ -194,6 +225,8 @@ while running:
             for j in range(num_of_enemies):
                 enemyY[j] = 2000
             game_over_text()
+            if score_value > top_score:
+                new_record()
             break
         # Enemy movement
         enemyX[i] += enemyX_change[i]
@@ -234,3 +267,7 @@ while running:
 
     # constantly updating the display always need this
     pygame.display.update()
+
+# generating the csv
+with open("score_log.txt", "a") as file:
+    file.write("\n{},{},{}".format(today, name, score_value))
