@@ -340,4 +340,4 @@ while loop:
         if name == "":
             name = "Anonymous"
         with open("score_log.txt", "a") as file:
-            file.write("\n{},{},{}".format(today, name, score_value))
+            file.write("{},{},{}\n".format(today, name, score_value))
